@@ -1,1 +1,1 @@
-from .user import HackcoinUser
+from .user import HackcoinUserManager
