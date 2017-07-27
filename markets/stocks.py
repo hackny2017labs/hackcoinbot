@@ -16,11 +16,12 @@ def fetch_quote(ticker):
 
             if "," in info['l']:
                 info['l'] = info['l'].replace(',','')
-
+            print(info)
             quote =   {
                 "TICKER": info['t'],
                 "PRICE": info['l'],
                 "PRICEF": float(info['l']),
+                "CHANGE": float(info['c']),
                 "TIME": info['ltt'],
                 "DATE": datetime.strptime(info['lt_dts'], "%Y-%m-%dT%H:%M:%SZ")
             }
