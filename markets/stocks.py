@@ -16,7 +16,6 @@ def fetch_quote(ticker):
 
             if "," in info['l']:
                 info['l'] = info['l'].replace(',','')
-            print(info)
             quote =   {
                 "TICKER": info['t'],
                 "PRICE": info['l'],
