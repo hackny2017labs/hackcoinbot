@@ -28,3 +28,12 @@ def get_command_type(command_tokens):
 
     if command_tokens[0] in set(["meme", "shit", "shitpost"]):
         return "meme"
+
+def is_private_message(slack_client, channel_id):
+    im_ids = [
+        x['id']
+        for x in
+        slack_client.api_call("im.list")['ims']
+    ]
+
+    return channel_id in set(im_ids)

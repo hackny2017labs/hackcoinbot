@@ -4,7 +4,7 @@ from slackclient import SlackClient
 import random
 
 from markets import is_one_hour_left
-from handlers import get_price, get_command_type, buy, sell
+from handlers import is_private_message, get_price, get_command_type, buy, sell
 from users import HackcoinUserManager
 
 # env variable bot_id
@@ -109,18 +109,27 @@ def parse_slack_output(slack_rtm_output):
     output_list = slack_rtm_output
     if output_list and len(output_list) > 0:
         for output in output_list:
+            command_text = None
+
+            # Public channel
             if output and 'text' in output and AT_BOT in output['text']:
+                command_text = output['text'].split(AT_BOT)[1].strip().lower()
+
+            elif output and 'text' in output and 'channel' in output and \
+                output['user'] != BOT_ID and \
+                is_private_message(slack_client, output['channel']):
+
+                command_text = output['text'].strip().lower()
+
+            if command_text is not None:
                 # Return: the user, command, and channel
-                return output['text'].split(AT_BOT)[1].strip().lower(), \
-                       output['channel'], \
-                       output['user']
+                return command_text, output['channel'], output['user']
     return None, None, None
 
 def listen():
     # 1 second delay between reading from firehose
     READ_WEBSOCKET_DELAY = 0.25
     CHECK_MARKET_REMINDER = True
-
 
     if slack_client.rtm_connect():
         print("hackcoinbot says hello!")
