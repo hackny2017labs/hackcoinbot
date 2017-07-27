@@ -4,7 +4,7 @@ from slackclient import SlackClient
 import random
 
 from markets import is_one_hour_left
-from handlers import is_private_message, get_price, get_command_type, buy, sell, portfolio
+from handlers import is_private_message, get_price, get_command_type, buy, sell, portfolio, print_help
 from users import HackcoinUserManager
 
 # env variable bot_id
@@ -53,32 +53,7 @@ def handle_command(command, channel, user_id):
         response = user_manager.check_leaderboard(user_id, channel=channel)
 
     if command_type == "help":
-        response = """
-Hackcoin is a trading and investment currency for slack.  Everyone starts with 10000 Hackcoins.
-You can message @hackcoinbot to access your Hackcoins.
-
-Check Account:
--------------
-@hackcoinbot: balance
-@hackcoinbot: portfolio
-
-Trading:
--------
-Trade shares of stock with Hackcoin! 1 coin = 1 USD.
-Buy and sell using a ticker and share count.
-
-@hackcoinbot: $AAPL         check price of Apple
-@hackcoinbot: buy AAPL 10   buy 10 shares of Apple
-@hackcoinbot: sell MSFT 10  sell 10 shares of Microsoft
-
-Leaderboard:
------------
-@hackcoinbot: leaderboard
-
-Shitpost:
---------
-:wink: you already know
-        """
+        response = print_help()
 
     if command_type == "meme":
         response = random.choice([
