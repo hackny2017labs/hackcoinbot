@@ -66,10 +66,17 @@ class HackcoinUserManager(object):
 
         for ticker in self.users[user_id]['positions']:
             shares = self.users[user_id]['positions'][ticker]
-            stock_price = stocks.fetch_quote(ticker)['PRICEF']
+            quote = stocks.fetch_quote(ticker)
+            stock_price = quote['PRICEF']
+            day_change = quote["CHANGE"]
             total_value = stock_price * shares
 
-            response += "{} shares of {} (worth {} Hackcoins)\n".format(shares, ticker, total_value)
+            if day_change < 0:
+                response += "{} shares of {} (Down {} percent on the day and worth {} Hackcoins)\n".format(shares, ticker, abs(day_change), total_value)
+            elif day_change > 0:
+                response += "{} shares of {} (Up {} percent on the day and worth {} Hackcoins)\n".format(shares, ticker, abs(day_change), total_value)
+            else:
+                response += "{} shares of {} (No change on the day and worth {} Hackcoins)\n".format(shares, ticker, total_value)
 
         return response
 
