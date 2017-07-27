@@ -129,7 +129,7 @@ def listen():
             if CHECK_MARKET_REMINDER and is_one_hour_left():
                 slack_client.api_call("chat.postMessage",
                                         channel="#tradingfloor",
-                                        text="@channel The stock market closes in *1 hour* :hourglass:",
+                                        text="<!channel> The stock market closes in *1 hour* :hourglass:",
                                         as_user=True)
                 CHECK_MARKET_REMINDER = False
 
