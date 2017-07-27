@@ -4,7 +4,7 @@ from slackclient import SlackClient
 import random
 
 from markets import is_one_hour_left
-from handlers import is_private_message, get_price, get_command_type, buy, sell
+from handlers import is_private_message, get_price, get_command_type, buy, sell, portfolio
 from users import HackcoinUserManager
 
 # env variable bot_id
@@ -27,7 +27,9 @@ def handle_command(command, channel, user_id):
     """
     user_manager.load_user(user_id, channel=channel)
 
+    # Set defaults.
     response = "Type *@hackcoinbot help* for a guide!"
+    attachment = []
 
     command_tokens = [w.lower() for w in command.strip().split(" ")]
     command_type = get_command_type(command_tokens)
@@ -45,7 +47,7 @@ def handle_command(command, channel, user_id):
         response = user_manager.check_balance(user_id, channel=channel)
 
     if command_type == "portfolio":
-        response = user_manager.check_portfolio(user_id, channel=channel)
+        response, attachment = portfolio(user_manager, user_id, channel=channel)
 
     if command_type == "leaderboard":
         response = user_manager.check_leaderboard(user_id, channel=channel)
@@ -98,7 +100,9 @@ Shitpost:
 
     if response is not None:
         slack_client.api_call("chat.postMessage", channel=channel,
-                              text=response, as_user=True)
+                              text=response,
+                              attachments=attachment,
+                              as_user=True)
 
 def parse_slack_output(slack_rtm_output):
     """
@@ -127,7 +131,7 @@ def parse_slack_output(slack_rtm_output):
     return None, None, None
 
 def listen():
-    # 1 second delay between reading from firehose
+    # 0.25 second delay between reading from firehose
     READ_WEBSOCKET_DELAY = 0.25
     CHECK_MARKET_REMINDER = True
 

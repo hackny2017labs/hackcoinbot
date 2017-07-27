@@ -42,6 +42,9 @@ class HackcoinUserManager(object):
         with open(USER_JSON, 'w') as f:
             json.dump(self.users, f)
 
+    def get_user_thumbnail_url(self, user_id):
+        return slack_client.api_call('users.info', user=user_id)['user']['profile']['image_24']
+
     def check_balance(self, user_id, channel=None):
         balance = 0
         balance += self.users[user_id]['coins']
@@ -59,7 +62,7 @@ class HackcoinUserManager(object):
         return response
 
     def check_portfolio(self, user_id, channel=None):
-        response = "{} has: \n".format(self.users[user_id]["first_name"])
+        response = ""
 
         coins = self.users[user_id]['coins']
         response += "{} Hackcoins :coin: \n".format(coins)
@@ -68,15 +71,15 @@ class HackcoinUserManager(object):
             shares = self.users[user_id]['positions'][ticker]
             quote = stocks.fetch_quote(ticker)
             stock_price = quote['PRICEF']
-            day_change = quote["CHANGE"]
+            day_change = quote['CHANGE']
             total_value = stock_price * shares
 
             if day_change < 0:
-                response += "{} shares of {} (Down {} percent on the day and worth {} Hackcoins)\n".format(shares, ticker, abs(day_change), total_value)
+                response += "{:7} shares of {:5}\t :arrow_up_small: {:04.2f}% today\t worth {} Hackcoins\n".format(shares, ticker, abs(day_change), total_value)
             elif day_change > 0:
-                response += "{} shares of {} (Up {} percent on the day and worth {} Hackcoins)\n".format(shares, ticker, abs(day_change), total_value)
+                response += "{:7} shares of {:5}\t :arrow_down_small: {:04.2f}% today\t worth {} Hackcoins\n".format(shares, ticker, abs(day_change), total_value)
             else:
-                response += "{} shares of {} (No change on the day and worth {} Hackcoins)\n".format(shares, ticker, total_value)
+                response += "{:7} shares of {:5}\t :zero:% today\t| worth {} Hackcoins\n".format(shares, ticker, abs(day_change), total_value)
 
         return response
 
