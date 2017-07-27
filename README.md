@@ -1,0 +1,2 @@
+# hackcoinbot
+coin powering #wallstreetbets
