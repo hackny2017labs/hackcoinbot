@@ -20,7 +20,7 @@ def fetch_quote(ticker):
                 "TICKER": info['t'],
                 "PRICE": info['l'],
                 "PRICEF": float(info['l']),
-                "CHANGE": float(info['c']),
+                "CHANGE": float(info['cp']),
                 "TIME": info['ltt'],
                 "DATE": datetime.strptime(info['lt_dts'], "%Y-%m-%dT%H:%M:%SZ")
             }
