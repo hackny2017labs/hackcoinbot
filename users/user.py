@@ -47,17 +47,16 @@ class HackcoinUserManager(object):
         return slack_client.api_call('users.info', user=user_id)['user']['profile']['image_24']
 
     def check_balance(self, user_id, channel=None):
-        me = self.users[user_id]
         balance = 0
-        balance += me['coins']
-        for ticker in me['positions']:
-            shares = me['positions'][ticker]['shares']
+        balance += self.users[user_id]['coins']
+        for ticker in self.users[user_id]['positions']:
+            shares = self.users[user_id]['positions'][ticker]['shares']
             stock_price = stocks.fetch_quote(ticker)['PRICEF']
             total_value = stock_price * shares
             balance += total_value
 
         response = '{} has a balance of {} Hackcoins :money_with_wings:'.format(
-            me["first_name"],
+            self.users[user_id]["first_name"],
             balance
         )
 
@@ -65,16 +64,16 @@ class HackcoinUserManager(object):
 
     def check_portfolio(self, user_id, channel=None):
         response = ""
-        me = self.users[user_id]
+
         balance = 0
 
-        coins = me['coins']
+        coins = self.users[user_id]['coins']
         balance += coins
         response += "{} Hackcoins :coin: \n".format(coins)
 
-        for ticker in me['positions']:
-            shares = me['positions'][ticker]['shares']
-            avg_price = float(me['positions'][ticker]['average_price'])
+        for ticker in self.users[user_id]['positions']:
+            shares = self.users[user_id]['positions'][ticker]['shares']
+            avg_price = float(self.users[user_id]['positions'][ticker]['average_price'])
 
             quote = stocks.fetch_quote(ticker)
             stock_price = quote['PRICEF']
@@ -106,13 +105,13 @@ class HackcoinUserManager(object):
     def check_leaderboard(self, user_id, channel=None):
         # list of tuples in the form (user_id, balance)
         balance_tuples = []
-        me = self.users[user_id]
+
 
         for user_id in self.users:
             balance = 0
-            balance += me['coins']
-            for ticker in me['positions']:
-                shares = me['positions'][ticker]['shares']
+            balance += self.users[user_id]['coins']
+            for ticker in self.users[user_id]['positions']:
+                shares = self.users[user_id]['positions'][ticker]['shares']
                 stock_price = stocks.fetch_quote(ticker)['PRICEF']
                 total_value = stock_price * shares
                 balance += total_value
@@ -132,7 +131,7 @@ class HackcoinUserManager(object):
         return response
 
     def buy_shares(self, ticker, shares, user_id, channel=None):
-        me = self.users[user_id]
+
         attachment = []
         now = datetime.now().strftime('%s')
 
@@ -142,24 +141,25 @@ class HackcoinUserManager(object):
             stock_price = quote['PRICEF']
             total_value = stock_price * shares
 
-            if total_value < me['coins']:
+            if total_value < self.users[user_id]['coins']:
                 # decrement balance
-                me['coins'] -= total_value
+                self.users[user_id]['coins'] -= total_value
 
                 # increment share ct, adjust the average buy price
-                if ticker in me['positions']:
-                    old_price = me['positions'][ticker]['average_price']
-                    old_shares = me['positions'][ticker]['shares']
+                if ticker in self.users[user_id]['positions']:
+                    old_price = self.users[user_id]['positions'][ticker]['average_price']
+                    old_shares = self.users[user_id]['positions'][ticker]['shares']
                     old_total = float(old_price) * float(old_shares)
                     new_total = old_total + total_value
                     new_shares = old_shares + shares
                     new_price = new_total * 1.0 / new_shares
 
-                    me['positions'][ticker]['shares'] += shares
-                    me['positions'][ticker]['average_price'] = new_price
+                    self.users[user_id]['positions'][ticker]['shares'] += shares
+                    self.users[user_id]['positions'][ticker]['average_price'] = new_price
                 else:
-                    me['positions'][ticker] = {}
-                    me['positions'][ticker]['shares'] = shares
+                    self.users[user_id]['positions'][ticker] = {}
+                    self.users[user_id]['positions'][ticker]['shares'] = shares
+                    self.users[user_id]['positions'][ticker]['average_price'] = stock_price
 
                 response = ""
 
@@ -170,7 +170,7 @@ class HackcoinUserManager(object):
                     total_value
                 )
 
-                average_price = me['positions'][ticker]['average_price']
+                average_price = self.users[user_id]['positions'][ticker]['average_price']
                 cumul_pct = (stock_price - average_price) * 100.0 / average_price
 
                 attach_color = "good"
@@ -181,7 +181,7 @@ class HackcoinUserManager(object):
                     {
                         "fallback": "Shares purchased!",
                         "color": attach_color,
-                        "author_name": me['first_name'],
+                        "author_name": self.users[user_id]['first_name'],
                         "author_icon": self.get_user_thumbnail_url(user_id),
                         "title": "Shares purchased!",
                         "text": response_text,
@@ -193,7 +193,7 @@ class HackcoinUserManager(object):
                             },
                             {
                                 "title": "Remaining Coins",
-                                "value": "{:04.2f}".format(me['coins']),
+                                "value": "{:04.2f}".format(self.users[user_id]['coins']),
                                 "short": False
                             }
                         ],
@@ -202,13 +202,13 @@ class HackcoinUserManager(object):
                 ]
             else:
                 response = 'You only have {} coins but you need {} coins to buy {} shares of {} :cry:'.format(
-                    me['coins'],
+                    self.users[user_id]['coins'],
                     total_value,
                     shares,
                     ticker
                 )
         else:
-            response = 'Markets are closed right now {} :scream:'.format(me["first_name"])
+            response = 'Markets are closed right now {} :scream:'.format(self.users[user_id]["first_name"])
 
         # notify their account balance
         slack_client.api_call('chat.postMessage',
@@ -220,7 +220,7 @@ class HackcoinUserManager(object):
         self.save_users_to_file()
 
     def sell_shares(self, ticker, shares, user_id, channel=None):
-        me = self.users[user_id]
+
         attachment = []
         now = datetime.now().strftime('%s')
 
@@ -230,13 +230,15 @@ class HackcoinUserManager(object):
             stock_price = quote['PRICEF']
             total_value = stock_price * shares
 
-            if ticker in me['positions'] and shares <= me['positions'][ticker]['shares']:
+            if ticker in self.users[user_id]['positions'] and shares <= self.users[user_id]['positions'][ticker]['shares']:
                 # increment balance
-                me['coins'] += total_value
+                self.users[user_id]['coins'] += total_value
 
-                me['positions'][ticker]['shares'] -= shares
-                if me['positions'][ticker]['shares'] == 0:
-                    del me['positions'][ticker]
+                self.users[user_id]['positions'][ticker]['shares'] -= shares
+
+                average_price = self.users[user_id]['positions'][ticker]['average_price']
+                if self.users[user_id]['positions'][ticker]['shares'] == 0:
+                    del self.users[user_id]['positions'][ticker]
 
                 response = ""
 
@@ -247,7 +249,6 @@ class HackcoinUserManager(object):
                     total_value
                 )
 
-                average_price = me['positions'][ticker]['average_price']
                 cumul_pct = (stock_price - average_price) * 100.0 / average_price
                 net_profit = shares * 1.0 * (stock_price - average_price)
 
@@ -259,7 +260,7 @@ class HackcoinUserManager(object):
                     {
                         "fallback": "Shares sold!",
                         "color": attach_color,
-                        "author_name": me['first_name'],
+                        "author_name": self.users[user_id]['first_name'],
                         "author_icon": self.get_user_thumbnail_url(user_id),
                         "title": "Shares sold!",
                         "text": response_text,
@@ -276,7 +277,7 @@ class HackcoinUserManager(object):
                             },
                             {
                                 "title": "Remaining Coins",
-                                "value": "{:04.2f}".format(me['coins']),
+                                "value": "{:04.2f}".format(self.users[user_id]['coins']),
                                 "short": False
                             }
                         ],
@@ -288,7 +289,7 @@ class HackcoinUserManager(object):
                     ticker
                 )
         else:
-            response = 'Markets are closed right now {} :scream:'.format(me["first_name"])
+            response = 'Markets are closed right now {} :scream:'.format(self.users[user_id]["first_name"])
 
         # notify their account balance
         slack_client.api_call('chat.postMessage',

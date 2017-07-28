@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 import time
 from slackclient import SlackClient
 import random
@@ -73,6 +74,8 @@ def handle_command(command, channel, user_id):
             " :fastparrot: "
         ])
 
+    print datetime.now(), user_manager.users[user_id]['first_name'], command_type, command
+
     if response is not None:
         slack_client.api_call("chat.postMessage", channel=channel,
                               text=response,
@@ -95,6 +98,7 @@ def parse_slack_output(slack_rtm_output):
                 command_text = output['text'].split(AT_BOT)[1].strip().lower()
 
             elif output and 'text' in output and 'channel' in output and \
+                'user' in output and \
                 output['user'] != BOT_ID and \
                 is_private_message(slack_client, output['channel']):
 
