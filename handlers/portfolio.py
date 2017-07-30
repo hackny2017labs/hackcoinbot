@@ -1,5 +1,6 @@
 from datetime import datetime
 
+
 def portfolio(user_manager, user_id, channel=None):
     response = user_manager.check_portfolio(user_id, channel=channel)
     now = datetime.now().strftime('%s')

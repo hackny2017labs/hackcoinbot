@@ -1,5 +1,6 @@
 from datetime import datetime
 
+
 def is_open(market = "stocks"):
     # note : could be made more robust
 
