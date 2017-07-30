@@ -1,6 +1,7 @@
-import urllib2
-import json
 from datetime import datetime
+import json
+import urllib2
+
 
 def fetch_quote(ticker):
     quote = None

@@ -1,12 +1,14 @@
 import os
 from datetime import datetime
 import time
-from slackclient import SlackClient
 import random
 
-from markets import is_one_hour_left
+from slackclient import SlackClient
+
 from handlers import is_private_message, get_price, get_command_type, buy, sell, portfolio, print_help
+from markets import is_one_hour_left
 from users import HackcoinUserManager
+
 
 # env variable bot_id
 BOT_ID = os.environ.get("SLACK_BOT_ID")
