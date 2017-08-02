@@ -1,0 +1,20 @@
+version: "3"
+
+services:
+  bot:
+    build:
+      context: .
+      dockerfile: docker/bot/Dockerfile
+    depends_on:
+      - "redis"
+    volumes:
+      - .:/opt/hackcoinbot
+    env_file:
+      - access.env
+
+  redis:
+    build:
+      context: .
+      dockerfile: docker/redis/Dockerfile
+    ports:
+      - "6379:6379"

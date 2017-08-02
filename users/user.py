@@ -5,6 +5,7 @@ import os
 from slackclient import SlackClient
 
 from markets import is_open, stocks
+import redis_interface
 
 
 # instantiate Slack client
