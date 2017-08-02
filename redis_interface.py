@@ -1,3 +1,4 @@
+from decimal import Decimal
 from functools import wraps
 
 import redis
@@ -43,7 +44,16 @@ def get_user(id, fields=[], attr=None):
 
 @prefix('portfolio')
 def get_portfolio(id, fields=[], attr=None):
-    return _get(id, fields=fields, attr=attr)
+    portfolio = _get(id, fields=fields, attr=attr)
+
+    for k, v in portfolio.items():
+        vals = [Decimal(x) for x in v.split(':')]
+        portfolio[k.upper()] = {
+            'count': vals[0],
+            'price': vals[1]
+        }
+
+    return portfolio
 
 def _set(key, val):
     to_delete = []
@@ -65,6 +75,12 @@ def set_user(id, val):
 
 @prefix('portfolio')
 def set_portfolio(id, val):
+    for k, v in val.items():
+        val[k.upper()] = '{}:{}'.format(
+            str(v['count']),
+            str(v['price'])
+        )
+
     _set(id, val)
 
 def _delete(key):
@@ -89,6 +105,13 @@ def dump():
         id = key.split(':')[1]
 
         users['portfolio'] = client.hgetall(key)
+
+        for k, v in users['portfolio'].items():
+            vals = [Decimal(x) for x in v.split(':')]
+            users['portfolio'][k.upper()] = {
+                'count': vals[0],
+                'price': vals[1]
+            }
 
     return users
 
