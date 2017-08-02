@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+import json
 import time
 import random
 
@@ -8,6 +9,7 @@ from slackclient import SlackClient
 from handlers import is_private_message, get_price, get_command_type, buy, sell, portfolio, print_help
 from markets import is_one_hour_left
 from users import HackcoinUserManager
+import redis_interface
 
 
 # env variable bot_id
@@ -116,10 +118,17 @@ def parse_slack_output(slack_rtm_output):
 
     return None, None, None
 
+def dump_redis_to_file():
+    data = redis_interface.dump()
+    with open('user_data.json', 'w') as f:
+        f.write(json.dumps(data))
+
 def listen():
     # 0.25 second delay between reading from firehose
     READ_WEBSOCKET_DELAY = 0.25
     CHECK_MARKET_REMINDER = True
+
+    last_updated = datetime.now()
 
     if slack_client.rtm_connect():
         print("hackcoinbot says hello!")
@@ -135,6 +144,10 @@ def listen():
             command, channel, user_id = parse_slack_output(slack_client.rtm_read())
             if command and channel and user_id:
                 handle_command(command, channel, user_id)
+
+            if (datetime.now() - last_updated).total_seconds > 60000:
+                dump_redis_to_file()
+
             time.sleep(READ_WEBSOCKET_DELAY)
     else:
         print("Connection failed. Invalid Slack token or bot ID?")
