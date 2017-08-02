@@ -9,8 +9,8 @@ REFRESH=${1:-0}
 trap "cleanUp" SIGINT SIGTERM EXIT
 
 function cleanUp() {
-	PID=$(docker ps -q --filter name=hackcoinbot-redis)
-	docker kill $PID
+	REDIS=$(docker ps -q --filter name=hackcoinbot-redis)
+	docker kill $REDIS > /dev/null 2>&1
 }
 
 CONTAINER_PID=$(docker ps --filter status=exited --filter name=hackcoinbot-redis -q)
