@@ -11,6 +11,7 @@ services:
       - .:/opt/hackcoinbot
     env_file:
       - access.env
+    entrypoint: ./wait-for-it.sh -t 15 redis:6379 -- python app.py
 
   redis:
     build:

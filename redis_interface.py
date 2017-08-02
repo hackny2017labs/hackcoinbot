@@ -1,5 +1,6 @@
 from decimal import Decimal
 from functools import wraps
+import os
 
 import redis
 
@@ -9,8 +10,10 @@ from utils import diff
 class Delete:
     pass
 
-
-client = redis.StrictRedis(host='localhost', port=6379, db=0)
+host = 'localhost'
+if os.environ.get('is_docker'):
+    host = 'redis'
+client = redis.StrictRedis(host=host, port=6379, db=0)
 
 def prefix(pre):
     def inner(func):
@@ -40,7 +43,10 @@ def _get(key, fields=[], attr=None):
 
 @prefix('user')
 def get_user(id, fields=[], attr=None):
-    return _get(id, fields=fields, attr=attr)
+    user = _get(id, fields=fields, attr=attr)
+    user['coins'] = Decimal(user.get('coins') or '0')
+
+    return user
 
 @prefix('positions')
 def get_positions(id, fields=[], attr=None):
@@ -71,6 +77,7 @@ def _set(key, val):
 
 @prefix('user')
 def set_user(id, val):
+    val['coins'] = val['coins']
     _set(id, val)
 
 @prefix('positions')

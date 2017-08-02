@@ -3,7 +3,7 @@ from datetime import datetime
 
 def is_open(market = "stocks"):
     # note : could be made more robust
-
+    return True
     now = datetime.now().strftime('%H%M')
     weekday = datetime.today().weekday()
     if market == "stocks":
