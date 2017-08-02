@@ -42,18 +42,18 @@ def _get(key, fields=[], attr=None):
 def get_user(id, fields=[], attr=None):
     return _get(id, fields=fields, attr=attr)
 
-@prefix('portfolio')
-def get_portfolio(id, fields=[], attr=None):
-    portfolio = _get(id, fields=fields, attr=attr)
+@prefix('positions')
+def get_positions(id, fields=[], attr=None):
+    positions = _get(id, fields=fields, attr=attr)
 
-    for k, v in portfolio.items():
+    for k, v in positions.items():
         vals = [Decimal(x) for x in v.split(':')]
-        portfolio[k.upper()] = {
-            'count': vals[0],
-            'price': vals[1]
+        positions[k.upper()] = {
+            'shares': vals[0],
+            'average_price': vals[1]
         }
 
-    return portfolio
+    return positions
 
 def _set(key, val):
     to_delete = []
@@ -73,15 +73,15 @@ def _set(key, val):
 def set_user(id, val):
     _set(id, val)
 
-@prefix('portfolio')
-def set_portfolio(id, val):
-    for k, v in val.items():
-        val[k.upper()] = '{}:{}'.format(
-            str(v['count']),
-            str(v['price'])
-        )
-
-    _set(id, val)
+@prefix('positions')
+def set_positions(id, val):
+    data = {
+        k.upper(): '{}:{}'.format(
+            str(v['shares']),
+            str(v['average_price'])
+        ) for k, v in val.items()
+    }
+    _set(id, data)
 
 def _delete(key):
     client.delete(key)
@@ -90,30 +90,28 @@ def _delete(key):
 def delete_user(id):
     _delete(id)
 
-@prefix('portfolio')
-def delete_portfolio(id):
+@prefix('positions')
+def delete_positions(id):
     _delete(id)
 
 def dump():
     user_keys = client.keys('user:*')
-    portfolio_keys = client.keys('portfolio:*')
+    portfolio_keys = client.keys('positions:*')
 
-    users = {
-        k.split(':')[1]: client.hgetall(k) for k in user_keys
-    }
+    users = {}
     for key in portfolio_keys:
         id = key.split(':')[1]
-
-        users['portfolio'] = client.hgetall(key)
-
-        for k, v in users['portfolio'].items():
-            vals = [Decimal(x) for x in v.split(':')]
-            users['portfolio'][k.upper()] = {
-                'count': vals[0],
-                'price': vals[1]
-            }
+        users[id] = get_user(id)
+        users[id]['positions'] = get_positions(id)
 
     return users
 
-def load():
-    pass
+def load(data):
+    for id, val in data.items():
+        positions = val.get('positions')
+
+        if positions:
+            del val['positions']
+            set_positions(id, positions)
+
+        set_user(id, val)
