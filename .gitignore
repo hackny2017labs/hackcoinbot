@@ -1,1 +1,7 @@
 *.pyc
+__pycache__
+*.swo
+*.swp
+.redis-data
+user_data.json
+access.env

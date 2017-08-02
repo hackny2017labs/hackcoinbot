@@ -1,5 +1,6 @@
 from markets.stocks import fetch_quote
 
+
 def get_price(command_tokens):
     try:
         ticker = command_tokens[0][1:]

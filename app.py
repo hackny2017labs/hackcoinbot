@@ -1,12 +1,16 @@
 import os
 from datetime import datetime
+import json
 import time
-from slackclient import SlackClient
 import random
 
-from markets import is_one_hour_left
+from slackclient import SlackClient
+
 from handlers import is_private_message, get_price, get_command_type, buy, sell, portfolio, print_help
+from markets import is_one_hour_left
 from users import HackcoinUserManager
+import redis_interface
+
 
 # env variable bot_id
 BOT_ID = os.environ.get("SLACK_BOT_ID")
@@ -89,30 +93,42 @@ def parse_slack_output(slack_rtm_output):
         directed at the Bot, based on its ID.
     """
     output_list = slack_rtm_output
-    if output_list and len(output_list) > 0:
-        for output in output_list:
-            command_text = None
 
-            # Public channel
-            if output and 'text' in output and AT_BOT in output['text']:
-                command_text = output['text'].split(AT_BOT)[1].strip().lower()
+    if not output_list:
+        return None, None, None
 
-            elif output and 'text' in output and 'channel' in output and \
-                'user' in output and \
-                output['user'] != BOT_ID and \
-                is_private_message(slack_client, output['channel']):
+    for output in output_list:
+        command_text = None
 
-                command_text = output['text'].strip().lower()
+        # Public channel
+        if output and 'text' in output and AT_BOT in output['text']:
+            command_text = output['text'].split(AT_BOT)[1].strip().lower()
 
-            if command_text is not None:
-                # Return: the user, command, and channel
-                return command_text, output['channel'], output['user']
+        elif output and 'text' in output and 'channel' in output and \
+            'user' in output and \
+            not output.get('bot_id') and \
+            output['user'] != BOT_ID and \
+            is_private_message(slack_client, output['channel']):
+
+            command_text = output['text'].strip().lower()
+
+        if command_text is not None:
+            # Return: the user, command, and channel
+            return command_text, output['channel'], output['user']
+
     return None, None, None
+
+def dump_redis_to_file():
+    data = redis_interface.dump()
+    with open('user_data.json', 'w') as f:
+        f.write(json.dumps(data))
 
 def listen():
     # 0.25 second delay between reading from firehose
     READ_WEBSOCKET_DELAY = 0.25
     CHECK_MARKET_REMINDER = True
+
+    last_updated = datetime.now()
 
     if slack_client.rtm_connect():
         print("hackcoinbot says hello!")
@@ -120,14 +136,18 @@ def listen():
         while True:
             if CHECK_MARKET_REMINDER and is_one_hour_left():
                 slack_client.api_call("chat.postMessage",
-                                        channel="#tradingfloor",
-                                        text="<!channel> The stock market closes in *1 hour* :hourglass:",
-                                        as_user=True)
+                                      channel="#tradingfloor",
+                                      text="<!channel> The stock market closes in *1 hour* :hourglass:",
+                                      as_user=True)
                 CHECK_MARKET_REMINDER = False
 
             command, channel, user_id = parse_slack_output(slack_client.rtm_read())
             if command and channel and user_id:
                 handle_command(command, channel, user_id)
+
+            if (datetime.now() - last_updated).total_seconds > 60000:
+                dump_redis_to_file()
+
             time.sleep(READ_WEBSOCKET_DELAY)
     else:
         print("Connection failed. Invalid Slack token or bot ID?")

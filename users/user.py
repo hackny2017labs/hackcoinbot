@@ -1,8 +1,13 @@
-from slackclient import SlackClient
-from markets import is_open, stocks
+from copy import deepcopy
 from datetime import datetime
-import os
 import json
+import os
+
+from slackclient import SlackClient
+
+from markets import is_open, stocks
+import redis_interface
+
 
 # instantiate Slack client
 slack_client = SlackClient(os.environ.get('SLACK_BOT_TOKEN'))
@@ -14,7 +19,7 @@ INITIAL_COINS = 10000
 class HackcoinUserManager(object):
     def __init__(self):
         self.users = {}
-        self.load_users_from_file()
+        self.load_users(type='redis')
 
     def load_user(self, user_id, channel=None):
         if user_id not in self.users:
@@ -33,15 +38,21 @@ class HackcoinUserManager(object):
             slack_client.api_call('chat.postMessage', channel=channel,
                                   text=response,
                                   as_user=True)
-        self.save_users_to_file()
+        self.save_users(type='redis')
 
-    def load_users_from_file(self):
-        with open(USER_JSON, 'r') as f:
-            self.users = json.load(f)
+    def load_users(self, type='file'):
+        if type == 'file':
+            with open(USER_JSON, 'r') as f:
+                self.users = json.load(f)
+        else:
+            self.users = redis_interface.dump()
 
-    def save_users_to_file(self):
-        with open(USER_JSON, 'w') as f:
-            json.dump(self.users, f)
+    def save_users(self, type='file'):
+        if type == 'file':
+            with open(USER_JSON, 'w') as f:
+                json.dump(self.users, f)
+        else:
+            redis_interface.load(deepcopy(self.users))
 
     def get_user_thumbnail_url(self, user_id):
         return slack_client.api_call('users.info', user=user_id)['user']['profile']['image_24']
@@ -73,7 +84,7 @@ class HackcoinUserManager(object):
 
         for ticker in self.users[user_id]['positions']:
             shares = self.users[user_id]['positions'][ticker]['shares']
-            avg_price = float(self.users[user_id]['positions'][ticker]['average_price'])
+            avg_price = self.users[user_id]['positions'][ticker]['average_price']
 
             quote = stocks.fetch_quote(ticker)
             stock_price = quote['PRICEF']
@@ -105,7 +116,6 @@ class HackcoinUserManager(object):
     def check_leaderboard(self, user_id, channel=None):
         # list of tuples in the form (user_id, balance)
         balance_tuples = []
-
 
         for user_id in self.users:
             balance = 0
@@ -217,7 +227,7 @@ class HackcoinUserManager(object):
                             attachments = attachment,
                             as_user=True)
 
-        self.save_users_to_file()
+        self.save_users(type='redis')
 
     def sell_shares(self, ticker, shares, user_id, channel=None):
 
@@ -298,4 +308,4 @@ class HackcoinUserManager(object):
                             attachments = attachment,
                             as_user=True)
 
-        self.save_users_to_file()
+        self.save_users(type='redis')
