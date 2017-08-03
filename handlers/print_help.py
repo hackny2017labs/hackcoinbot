@@ -6,7 +6,7 @@ You can message @hackcoinbot to access your Hackcoins.
 Check Account:
 -------------
 @hackcoinbot: balance
-@hackcoinbot: portfolio
+@hackcoinbot: [*p*]ortfolio
 
 Trading:
 -------
@@ -14,12 +14,12 @@ Trade shares of stock with Hackcoin! 1 coin = 1 USD.
 Buy and sell using a ticker and share count.
 
 @hackcoinbot: $AAPL         check price of Apple
-@hackcoinbot: buy AAPL 10   buy 10 shares of Apple
-@hackcoinbot: sell MSFT 10  sell 10 shares of Microsoft
+@hackcoinbot: buy AAPL 10   [*b*]uy 10 shares of Apple
+@hackcoinbot: sell MSFT 10  [*s*]ell 10 shares of Microsoft
 
 Leaderboard:
 -----------
-@hackcoinbot: leaderboard
+@hackcoinbot: [*l*]eaderboard
 
 Shitpost:
 --------

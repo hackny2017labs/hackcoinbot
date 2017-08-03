@@ -154,7 +154,7 @@ class HackcoinUserManager(object):
         attachment = []
         now = datetime.now().strftime('%s')
 
-        if is_open() or True:
+        if is_open():
             quote = stocks.fetch_quote(ticker)
             ticker = quote['TICKER']
             stock_price = quote['PRICEF']
