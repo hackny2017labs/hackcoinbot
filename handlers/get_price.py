@@ -14,6 +14,13 @@ def get_price(command_tokens):
         quote['TICKER']
     )
 
+    bar_color = "good"
+    try:
+        if float(quote['CHANGE_AMT']) < 0:
+            bar_color = "danger"
+    except:
+        pass
+
     chart_url = "http://finviz.com/chart.ashx?t={}&ty=c&ta=1&p=d&s=l".format(
         quote['TICKER']
     )
@@ -28,7 +35,7 @@ def get_price(command_tokens):
     attachment = [
        {
            "fallback": "Check Price",
-           "color": "good",
+           "color": bar_color,
            "title": title,
            "fields": [
                 {
