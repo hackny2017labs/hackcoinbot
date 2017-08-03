@@ -1,8 +1,11 @@
-from slackclient import SlackClient
-from markets import is_open, stocks
 from datetime import datetime
-import os
 import json
+import os
+
+from slackclient import SlackClient
+
+from markets import is_open, stocks
+
 
 # instantiate Slack client
 slack_client = SlackClient(os.environ.get('SLACK_BOT_TOKEN'))
