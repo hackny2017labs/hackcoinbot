@@ -1,16 +1,18 @@
-from datetime import datetime
+from datetime import datetime, time
 
 
 def is_open(market = "stocks"):
-    # note : could be made more robust
-
-    now = datetime.now().strftime('%H%M')
-    weekday = datetime.today().weekday()
+    now = datetime.now()
+    weekday = now.weekday()
+    a = time(hour=9, minute=30)
+    b = time(hour=16)
     if market == "stocks":
-        return '0930' <= now <= '1600' and weekday <= 4
+        return a <= now.time() <= b and weekday <= 4
 
 def is_one_hour_left(market = "stocks"):
-    now = datetime.now().strftime('%H%M%S')
-    weekday = datetime.today().weekday()
+    now = datetime.now()
+    weekday = now.weekday()
+    a = datetime(year=now.year, month=now.month, day=now.day, hour=15)
+    b = datetime(year=now.year, month=now.month, day=now.day, hour=15, minute=1)
     if market == "stocks":
-        return '150000' <= now <= '150010' and weekday <= 4
+        return a <= now <= b and weekday <= 4
