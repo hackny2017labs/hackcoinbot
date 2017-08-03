@@ -67,6 +67,8 @@ def get_crpyto_price(command_tokens):
     try:
         symbol = command_tokens[0][1:]
         quote = cryptos.fetch_quote(symbol)
+        if quote == None:
+            raise Exception('no quote found')
     except:
         return "We don't support that coin yet :cry:", None
 
