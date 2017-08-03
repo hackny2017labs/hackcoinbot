@@ -4,7 +4,7 @@ import os
 
 from slackclient import SlackClient
 
-from markets import is_open, stocks
+from markets import is_open, stocks, cryptos
 
 
 # instantiate Slack client
@@ -60,7 +60,12 @@ class HackcoinUserManager(object):
 
     def check_balance(self, user_id, channel=None):
         tickers = self.users[user_id]['positions'].keys()
-        quotes = stocks.batch_fetch_quotes(tickers)
+        stocks_tickers = [x for x in tickers if x[-2:] != '.c']
+        crypto_symbols = [x for x in tickers if x[-2:] == '.c']
+        quotes = stocks.batch_fetch_quotes(stocks_tickers)
+
+        for symbol in crypto_symbols:
+            quotes[symbol] = cryptos.fetch_quote(symbol)
 
         balance = 0
         balance += self.users[user_id]['coins']
@@ -79,7 +84,13 @@ class HackcoinUserManager(object):
 
     def check_portfolio(self, user_id, channel=None):
         tickers = self.users[user_id]['positions'].keys()
-        quotes = stocks.batch_fetch_quotes(tickers)
+        stocks_tickers = [x for x in tickers if x[-2:] != '.c']
+        crypto_symbols = [x for x in tickers if x[-2:] == '.c']
+        quotes = stocks.batch_fetch_quotes(stocks_tickers)
+
+        for symbol in crypto_symbols:
+            quotes[symbol] = cryptos.fetch_quote(symbol)
+
         response = ""
 
         balance = 0
@@ -89,27 +100,23 @@ class HackcoinUserManager(object):
         response += "{} Hackcoins :coin: \n".format(coins)
 
         for ticker in tickers:
+            type_text = "shares"
+            if ticker[-2:] == '.c':
+                type_text = "coins"
+
             shares = self.users[user_id]['positions'][ticker]['shares']
             avg_price = float(self.users[user_id]['positions'][ticker]['average_price'])
 
             quote = quotes[ticker]
             stock_price = quote['PRICEF']
 
-            day_change = quote['CHANGE']
-            day_change_str = ""
-            if day_change > 0:
-                day_change_str = ":arrow_up_small: {:04.2f}%".format(abs(day_change))
-            elif day_change < 0:
-                day_change_str = ":arrow_down_small: {:04.2f}%".format(abs(day_change))
-            else:
-                day_change_str = ":zero:%"
-
             net_profit = (stock_price - avg_price) * shares
             balance += (stock_price * shares)
 
-            response += "{:5} {:5} shares (buy {:04.2f} | now {:04.2f} | net profit {:04.2f})\n".format(
+            response += "{:5} {:5} {} (buy {:04.2f} | now {:04.2f} | net profit {:04.2f})\n".format(
                 ticker,
                 shares,
+                type_text,
                 avg_price,
                 stock_price,
                 net_profit
@@ -121,7 +128,12 @@ class HackcoinUserManager(object):
 
     def check_leaderboard(self, user_id, channel=None):
         tickers = self.get_all_tickers()
-        quotes = stocks.batch_fetch_quotes(tickers)
+        stocks_tickers = [x for x in tickers if x[-2:] != '.c']
+        crypto_symbols = [x for x in tickers if x[-2:] == '.c']
+        quotes = stocks.batch_fetch_quotes(stocks_tickers)
+
+        for symbol in crypto_symbols:
+            quotes[symbol] = cryptos.fetch_quote(symbol)
 
         # list of tuples in the form (user_id, balance)
         balance_tuples = []
@@ -134,6 +146,7 @@ class HackcoinUserManager(object):
                 stock_price = quotes[ticker]['PRICEF']
                 total_value = stock_price * shares
                 balance += total_value
+            balance = float("{:06.2f}".format(balance))
             balance_tuples.append((user_id, balance))
 
         balance_tuples.sort(key=lambda x: x[1])
@@ -150,14 +163,25 @@ class HackcoinUserManager(object):
         return response
 
     def buy_shares(self, ticker, shares, user_id, channel=None):
+        try:
+            is_crypto = (ticker[-2:] == '.c')
+        except:
+            is_crypto = False
 
         attachment = []
         now = datetime.now().strftime('%s')
 
-        if is_open():
-            quote = stocks.fetch_quote(ticker)
-            ticker = quote['TICKER']
-            stock_price = quote['PRICEF']
+        if is_open() or is_crypto:
+            if not is_crypto:
+                quote = stocks.fetch_quote(ticker)
+                ticker = quote['TICKER']
+                stock_price = quote['PRICEF']
+                shares = int(shares)
+            else:
+                quote = cryptos.fetch_quote(ticker)
+                ticker = ticker[:-2].upper() + '.c'
+                stock_price = quote['PRICE']
+
             total_value = stock_price * shares
 
             if total_value < self.users[user_id]['coins']:
@@ -182,12 +206,20 @@ class HackcoinUserManager(object):
 
                 response = ""
 
-                response_text = '{} shares of {} bought at {} each (total {} coins)'.format(
-                    shares,
-                    ticker,
-                    stock_price,
-                    total_value
-                )
+                if is_crypto:
+                    response_text = '{} coins of {} bought at {} each (total {} Hackcoins)'.format(
+                        shares,
+                        ticker,
+                        stock_price,
+                        total_value
+                    )
+                else:
+                    response_text = '{} shares of {} bought at {} each (total {} coins)'.format(
+                        shares,
+                        ticker,
+                        stock_price,
+                        total_value
+                    )
 
                 average_price = self.users[user_id]['positions'][ticker]['average_price']
                 cumul_pct = (stock_price - average_price) * 100.0 / average_price
@@ -196,13 +228,17 @@ class HackcoinUserManager(object):
                 if cumul_pct < 0:
                     attach_color = "danger"
 
+                title_text = "Shares purchased!"
+                if is_crypto:
+                    title_text = "Coins purchased!"
+
                 attachment = [
                     {
-                        "fallback": "Shares purchased!",
+                        "fallback": title_text,
                         "color": attach_color,
                         "author_name": self.users[user_id]['first_name'],
                         "author_icon": self.get_user_thumbnail_url(user_id),
-                        "title": "Shares purchased!",
+                        "title": title_text,
                         "text": response_text,
                         "fields": [
                             {
@@ -220,11 +256,20 @@ class HackcoinUserManager(object):
                     }
                 ]
             else:
-                shares_can_buy = int(self.users[user_id]['coins'] * 1.0 / stock_price)
+                if is_crypto:
+                    shares_can_buy = int(self.users[user_id]['coins'] * 1000.0 / stock_price) / 1000.0
+                else:
+                    shares_can_buy = int(self.users[user_id]['coins'] * 1.0 / stock_price)
+
                 total_can_buy = shares_can_buy * stock_price
 
-                response = 'You can buy up to *{}* shares of {} for a total of *{}* Hackcoins :take_my_money:'.format(
+                type_text = "shares"
+                if is_crypto:
+                    type_text = "coins"
+
+                response = 'You can buy up to *{}* {} of {} for a total of *{}* Hackcoins  :take_my_money:'.format(
                     shares_can_buy,
+                    type_text,
                     ticker,
                     total_can_buy
                 )
@@ -241,14 +286,29 @@ class HackcoinUserManager(object):
         self.save_users_to_file()
 
     def sell_shares(self, ticker, shares, user_id, channel=None):
+        try:
+            is_crypto = (ticker[-2:] == '.c')
+        except:
+            is_crypto = False
+
+        type_text = "shares"
+        if is_crypto:
+            type_text = "coins"
 
         attachment = []
         now = datetime.now().strftime('%s')
 
-        if is_open():
-            quote = stocks.fetch_quote(ticker)
-            ticker = quote['TICKER']
-            stock_price = quote['PRICEF']
+        if is_open() or is_crypto:
+            if not is_crypto:
+                quote = stocks.fetch_quote(ticker)
+                ticker = quote['TICKER']
+                stock_price = quote['PRICEF']
+                shares = int(shares)
+            else:
+                quote = cryptos.fetch_quote(ticker)
+                ticker = ticker[:-2].upper() + '.c'
+                stock_price = quote['PRICE']
+
             total_value = stock_price * shares
 
             if ticker in self.users[user_id]['positions'] and shares <= self.users[user_id]['positions'][ticker]['shares']:
@@ -263,8 +323,9 @@ class HackcoinUserManager(object):
 
                 response = ""
 
-                response_text = '{} shares of {} sold at {} each (total {} coins)'.format(
+                response_text = '{} {} of {} sold at {} each (total {} coins)'.format(
                     shares,
+                    type_text,
                     ticker,
                     stock_price,
                     total_value
@@ -279,11 +340,11 @@ class HackcoinUserManager(object):
 
                 attachment = [
                     {
-                        "fallback": "Shares sold!",
+                        "fallback": "{} sold!".format(type_text.capitalize()),
                         "color": attach_color,
                         "author_name": self.users[user_id]['first_name'],
                         "author_icon": self.get_user_thumbnail_url(user_id),
-                        "title": "Shares sold!",
+                        "title": "{} sold!".format(type_text.capitalize()),
                         "text": response_text,
                         "fields": [
                             {
@@ -306,7 +367,8 @@ class HackcoinUserManager(object):
                     }
                 ]
             else:
-                response = 'You don\'t have enough shares of {} to sell :cry:'.format(
+                response = 'You don\'t have enough {} of {} to sell :cry:'.format(
+                    type_text,
                     ticker
                 )
         else:

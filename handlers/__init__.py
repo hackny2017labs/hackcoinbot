@@ -1,5 +1,5 @@
 from .main import get_command_type, is_private_message
-from .get_price import get_price
+from .get_price import get_price, get_crpyto_price
 from .trade import buy, sell
 from .portfolio import portfolio
 from .print_help import print_help
