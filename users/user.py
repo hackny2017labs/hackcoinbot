@@ -46,15 +46,27 @@ class HackcoinUserManager(object):
         with open(USER_JSON, 'w') as f:
             json.dump(self.users, f)
 
+    def get_all_tickers(self):
+        tickers = set()
+
+        for user_id in self.users:
+            my_tickers = set(self.users[user_id]['positions'].keys())
+            tickers = tickers.union(my_tickers)
+
+        return list(tickers)
+
     def get_user_thumbnail_url(self, user_id):
         return slack_client.api_call('users.info', user=user_id)['user']['profile']['image_24']
 
     def check_balance(self, user_id, channel=None):
+        tickers = self.users[user_id]['positions'].keys()
+        quotes = stocks.batch_fetch_quotes(tickers)
+
         balance = 0
         balance += self.users[user_id]['coins']
-        for ticker in self.users[user_id]['positions']:
+        for ticker in tickers:
             shares = self.users[user_id]['positions'][ticker]['shares']
-            stock_price = stocks.fetch_quote(ticker)['PRICEF']
+            stock_price = quotes[ticker]['PRICEF']
             total_value = stock_price * shares
             balance += total_value
 
@@ -66,6 +78,8 @@ class HackcoinUserManager(object):
         return response
 
     def check_portfolio(self, user_id, channel=None):
+        tickers = self.users[user_id]['positions'].keys()
+        quotes = stocks.batch_fetch_quotes(tickers)
         response = ""
 
         balance = 0
@@ -74,11 +88,11 @@ class HackcoinUserManager(object):
         balance += coins
         response += "{} Hackcoins :coin: \n".format(coins)
 
-        for ticker in self.users[user_id]['positions']:
+        for ticker in tickers:
             shares = self.users[user_id]['positions'][ticker]['shares']
             avg_price = float(self.users[user_id]['positions'][ticker]['average_price'])
 
-            quote = stocks.fetch_quote(ticker)
+            quote = quotes[ticker]
             stock_price = quote['PRICEF']
 
             day_change = quote['CHANGE']
@@ -106,16 +120,18 @@ class HackcoinUserManager(object):
         return response
 
     def check_leaderboard(self, user_id, channel=None):
+        tickers = self.get_all_tickers()
+        quotes = stocks.batch_fetch_quotes(tickers)
+
         # list of tuples in the form (user_id, balance)
         balance_tuples = []
-
 
         for user_id in self.users:
             balance = 0
             balance += self.users[user_id]['coins']
             for ticker in self.users[user_id]['positions']:
                 shares = self.users[user_id]['positions'][ticker]['shares']
-                stock_price = stocks.fetch_quote(ticker)['PRICEF']
+                stock_price = quotes[ticker]['PRICEF']
                 total_value = stock_price * shares
                 balance += total_value
             balance_tuples.append((user_id, balance))
