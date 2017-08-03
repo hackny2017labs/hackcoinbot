@@ -11,7 +11,7 @@ def get_price(command_tokens):
         ticker = command_tokens[0][1:]
         quote = stocks.fetch_quote(ticker)
     except:
-        return "I couldn't find the price you wanted :cry:"
+        return "I couldn't find the price you wanted :cry:", None
 
     title = "{} ({})".format(
         quote['NAME'],
@@ -66,7 +66,7 @@ def get_crpyto_price(command_tokens):
         symbol = command_tokens[0][1:]
         quote = cryptos.fetch_quote(symbol)
     except:
-        return "We don't support that coin yet :cry:"
+        return "We don't support that coin yet :cry:", None
 
     title = "{} ({})".format(
         quote['NAME'],
