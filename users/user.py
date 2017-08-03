@@ -154,7 +154,7 @@ class HackcoinUserManager(object):
         attachment = []
         now = datetime.now().strftime('%s')
 
-        if is_open():
+        if is_open() or True:
             quote = stocks.fetch_quote(ticker)
             ticker = quote['TICKER']
             stock_price = quote['PRICEF']
@@ -220,11 +220,13 @@ class HackcoinUserManager(object):
                     }
                 ]
             else:
-                response = 'You only have {} coins but you need {} coins to buy {} shares of {} :cry:'.format(
-                    self.users[user_id]['coins'],
-                    total_value,
-                    shares,
-                    ticker
+                shares_can_buy = int(self.users[user_id]['coins'] * 1.0 / stock_price)
+                total_can_buy = shares_can_buy * stock_price
+
+                response = 'You can buy up to *{}* shares of {} for a total of *{}* Hackcoins :take_my_money:'.format(
+                    shares_can_buy,
+                    ticker,
+                    total_can_buy
                 )
         else:
             response = 'Markets are closed right now {} :scream:'.format(self.users[user_id]["first_name"])
