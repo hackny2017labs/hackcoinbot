@@ -38,7 +38,7 @@ def handle_command(command, channel, user_id):
     command_type = get_command_type(command_tokens)
 
     if command_type == "price":
-        response = get_price(command_tokens)
+        response, attachment = get_price(command_tokens)
 
     if command_type == "buy":
         response = buy(user_manager, command_tokens, user_id, channel=channel)

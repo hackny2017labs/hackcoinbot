@@ -18,10 +18,12 @@ def fetch_quote(ticker):
             if "," in info['l']:
                 info['l'] = info['l'].replace(',','')
             quote =   {
+                "NAME": info['name'],
                 "TICKER": info['t'],
                 "PRICE": info['l'],
                 "PRICEF": float(info['l']),
                 "CHANGE": float(info['cp']),
+                "CHANGE_AMT": info['c'],
                 "TIME": info['ltt'],
                 "DATE": datetime.strptime(info['lt_dts'], "%Y-%m-%dT%H:%M:%SZ")
             }
@@ -33,4 +35,4 @@ def fetch_quote(ticker):
     return quote
 
 if __name__ == "__main__":
-    print fetch_quote('LMT')
+    print fetch_quote('AAPL')
