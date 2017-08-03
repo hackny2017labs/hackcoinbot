@@ -10,6 +10,8 @@ def get_price(command_tokens):
     try:
         ticker = command_tokens[0][1:]
         quote = stocks.fetch_quote(ticker)
+        if quote == None:
+            raise Exception('no quote found')
     except:
         return "I couldn't find the price you wanted :cry:", None
 
