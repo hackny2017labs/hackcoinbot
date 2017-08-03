@@ -5,19 +5,19 @@ def get_command_type(command_tokens):
     if "$" in command_tokens[0]:
         return "price"
 
-    if command_tokens[0] == "buy":
+    if command_tokens[0] in set(["buy", "b"]):
         return "buy"
 
-    if command_tokens[0] == "sell":
+    if command_tokens[0] in set(["sell", "s"]):
         return "sell"
 
     if command_tokens[0] == "balance":
         return "balance"
 
-    if command_tokens[0] == "portfolio":
+    if command_tokens[0] in set(["portfolio", "p"]):
         return "portfolio"
 
-    if command_tokens[0] in set(["leader", "leaderboard"]):
+    if command_tokens[0] in set(["leader", "leaderboard", "l", "top"]):
         return "leaderboard"
 
     if command_tokens[0] == "help":
