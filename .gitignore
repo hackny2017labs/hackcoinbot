@@ -4,3 +4,4 @@ __pycache__
 *.swp
 .redis-data
 user_data.json
+access.env
