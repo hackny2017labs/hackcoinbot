@@ -14,19 +14,19 @@ from users import HackcoinUserManager
 BOT_ID = os.environ.get("SLACK_BOT_ID")
 
 # constants
-AT_BOT = "<@" + BOT_ID + ">"
+AT_BOT = "<@{}>".format(BOT_ID)
 
 # instantiate Slack client
-slack_client = SlackClient(os.environ.get('SLACK_BOT_TOKEN'))
+slack_client = SlackClient(os.environ.get("SLACK_BOT_TOKEN"))
 
 # users manager object
 user_manager = HackcoinUserManager()
 
 def handle_command(command, channel, user_id):
     """
-        Receives commands directed at the bot and determines if they
-        are valid commands. If so, then acts on the commands. If not,
-        returns back what it needs for clarification.
+    Receives commands directed at the bot and determines if they
+    are valid commands. If so, then acts on the commands. If not,
+    returns back what it needs for clarification.
     """
     user_manager.load_user(user_id, channel=channel)
 
@@ -76,7 +76,7 @@ def handle_command(command, channel, user_id):
             " :fastparrot: "
         ])
 
-    print datetime.now(), user_manager.users[user_id]['first_name'], command_type, command
+    print(datetime.now(), user_manager.users[user_id]['first_name'], command_type, command)
 
     if response is not None:
         slack_client.api_call("chat.postMessage", channel=channel,

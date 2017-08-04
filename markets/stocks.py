@@ -30,7 +30,7 @@ def fetch_quote(ticker):
             break
 
         except Exception, e:
-            print e
+            print(e)
 
     return quote
 
@@ -49,7 +49,7 @@ def batch_fetch_quotes(tickers):
         try:
             data    = json.loads(content[3:])
         except Exception, e:
-            print e
+            print(e)
 
         for info in data:
             try:
@@ -73,7 +73,7 @@ def batch_fetch_quotes(tickers):
                     ticker = ticker.replace('.', '-')
                 quotes[ticker] = quote
             except Exception, e:
-                print e
+                print(e)
 
         cur += TICKERS_PER_BATCH
         time.sleep(0.1)
@@ -86,4 +86,4 @@ def batch_fetch_quotes(tickers):
     return quotes
 
 if __name__ == "__main__":
-    print fetch_quote('AAPL')
+    print(fetch_quote('AAPL'))

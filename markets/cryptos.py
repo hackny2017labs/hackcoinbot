@@ -37,9 +37,9 @@ def fetch_quote(symbol):
         }
 
     except Exception, e:
-        print e
+        print(e)
 
     return quote
 
 if __name__ == "__main__":
-    print fetch_quote('BTC')
+    print(fetch_quote('BTC'))
