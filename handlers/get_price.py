@@ -13,7 +13,7 @@ def get_price(command_tokens):
         if quote == None:
             raise Exception('no quote found')
     except:
-        return 'I couldn't find the price you wanted :cry:', None
+        return "I couldn't find the price you wanted :cry:", None
 
     title = '{} ({})'.format(
         quote['NAME'],
@@ -70,7 +70,7 @@ def get_crpyto_price(command_tokens):
         if quote == None:
             raise Exception('no quote found')
     except:
-        return 'We don't support that coin yet :cry:', None
+        return "We don't support that coin yet :cry:", None
 
     title = '{} ({})'.format(
         quote['NAME'],
