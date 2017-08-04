@@ -76,7 +76,7 @@ class HackcoinUserManager(object):
             balance += total_value
 
         response = '{} has a balance of {} Hackcoins :money_with_wings:'.format(
-            self.users[user_id]["first_name"],
+            self.users[user_id]['first_name'],
             balance
         )
 
@@ -91,18 +91,18 @@ class HackcoinUserManager(object):
         for symbol in crypto_symbols:
             quotes[symbol] = cryptos.fetch_quote(symbol)
 
-        response = ""
+        response = ''
 
         balance = 0
 
         coins = self.users[user_id]['coins']
         balance += coins
-        response += "{} Hackcoins :coin: \n".format(coins)
+        response += '{} Hackcoins :coin: \n'.format(coins)
 
         for ticker in tickers:
-            type_text = "shares"
+            type_text = 'shares'
             if ticker[-2:] == '.c':
-                type_text = "coins"
+                type_text = 'coins'
 
             shares = self.users[user_id]['positions'][ticker]['shares']
             avg_price = float(self.users[user_id]['positions'][ticker]['average_price'])
@@ -113,7 +113,7 @@ class HackcoinUserManager(object):
             net_profit = (stock_price - avg_price) * shares
             balance += (stock_price * shares)
 
-            response += "{:5} {:5} {} (buy {:04.2f} | now {:04.2f} | net profit {:04.2f})\n".format(
+            response += '{:5} {:5} {} (buy {:04.2f} | now {:04.2f} | net profit {:04.2f})\n'.format(
                 ticker,
                 shares,
                 type_text,
@@ -122,7 +122,7 @@ class HackcoinUserManager(object):
                 net_profit
             )
 
-        response += "\nTotal account value = {:04.2f} Hackcoins :coin: \n".format(balance)
+        response += '\nTotal account value = {:04.2f} Hackcoins :coin: \n'.format(balance)
 
         return response
 
@@ -146,20 +146,20 @@ class HackcoinUserManager(object):
                 stock_price = quotes[ticker]['PRICEF']
                 total_value = stock_price * shares
                 balance += total_value
-            balance = float("{:06.2f}".format(balance))
+            balance = float('{:06.2f}'.format(balance))
             balance_tuples.append((user_id, balance))
 
         balance_tuples.sort(key=lambda x: x[1])
         balance_tuples = balance_tuples[::-1]
 
-        response = ":racehorse: Hackcoin leaderboard :racehorse: \n"
+        response = ':racehorse: Hackcoin leaderboard :racehorse: \n'
         for i, balance in enumerate(balance_tuples):
-            response += "{})\t{}\t{} ".format(i+1, self.users[balance[0]]['first_name'], balance[1])
+            response += '{})\t{}\t{} '.format(i+1, self.users[balance[0]]['first_name'], balance[1])
 
             if i == 0:
-                response += "  :100:"
+                response += '  :100:'
 
-            response += "\n"
+            response += '\n'
         return response
 
     def buy_shares(self, ticker, shares, user_id, channel=None):
@@ -204,7 +204,7 @@ class HackcoinUserManager(object):
                     self.users[user_id]['positions'][ticker]['shares'] = shares
                     self.users[user_id]['positions'][ticker]['average_price'] = stock_price
 
-                response = ""
+                response = ''
 
                 if is_crypto:
                     response_text = '{} coins of {} bought at {} each (total {} Hackcoins)'.format(
@@ -224,35 +224,35 @@ class HackcoinUserManager(object):
                 average_price = self.users[user_id]['positions'][ticker]['average_price']
                 cumul_pct = (stock_price - average_price) * 100.0 / average_price
 
-                attach_color = "good"
+                attach_color = 'good'
                 if cumul_pct < 0:
-                    attach_color = "danger"
+                    attach_color = 'danger'
 
-                title_text = "Shares purchased!"
+                title_text = 'Shares purchased!'
                 if is_crypto:
-                    title_text = "Coins purchased!"
+                    title_text = 'Coins purchased!'
 
                 attachment = [
                     {
-                        "fallback": title_text,
-                        "color": attach_color,
-                        "author_name": self.users[user_id]['first_name'],
-                        "author_icon": self.get_user_thumbnail_url(user_id),
-                        "title": title_text,
-                        "text": response_text,
-                        "fields": [
+                        'fallback': title_text,
+                        'color': attach_color,
+                        'author_name': self.users[user_id]['first_name'],
+                        'author_icon': self.get_user_thumbnail_url(user_id),
+                        'title': title_text,
+                        'text': response_text,
+                        'fields': [
                             {
-                                "title": "Average Buy Price",
-                                "value": "{:04.2f} (overall {:04.2f}%)".format(average_price, cumul_pct),
-                                "short": False
+                                'title': 'Average Buy Price',
+                                'value': '{:04.2f} (overall {:04.2f}%)'.format(average_price, cumul_pct),
+                                'short': False
                             },
                             {
-                                "title": "Remaining Coins",
-                                "value": "{:04.2f}".format(self.users[user_id]['coins']),
-                                "short": False
+                                'title': 'Remaining Coins',
+                                'value': '{:04.2f}'.format(self.users[user_id]['coins']),
+                                'short': False
                             }
                         ],
-                        "ts": now
+                        'ts': now
                     }
                 ]
             else:
@@ -263,9 +263,9 @@ class HackcoinUserManager(object):
 
                 total_can_buy = shares_can_buy * stock_price
 
-                type_text = "shares"
+                type_text = 'shares'
                 if is_crypto:
-                    type_text = "coins"
+                    type_text = 'coins'
 
                 response = 'You can buy up to *{}* {} of {} for a total of *{}* Hackcoins  :take_my_money:'.format(
                     shares_can_buy,
@@ -274,7 +274,7 @@ class HackcoinUserManager(object):
                     total_can_buy
                 )
         else:
-            response = 'Markets are closed right now {} :scream:'.format(self.users[user_id]["first_name"])
+            response = 'Markets are closed right now {} :scream:'.format(self.users[user_id]['first_name'])
 
         # notify their account balance
         slack_client.api_call('chat.postMessage',
@@ -291,9 +291,9 @@ class HackcoinUserManager(object):
         except:
             is_crypto = False
 
-        type_text = "shares"
+        type_text = 'shares'
         if is_crypto:
-            type_text = "coins"
+            type_text = 'coins'
 
         attachment = []
         now = datetime.now().strftime('%s')
@@ -321,7 +321,7 @@ class HackcoinUserManager(object):
                 if self.users[user_id]['positions'][ticker]['shares'] == 0:
                     del self.users[user_id]['positions'][ticker]
 
-                response = ""
+                response = ''
 
                 response_text = '{} {} of {} sold at {} each (total {} coins)'.format(
                     shares,
@@ -334,36 +334,36 @@ class HackcoinUserManager(object):
                 cumul_pct = (stock_price - average_price) * 100.0 / average_price
                 net_profit = shares * 1.0 * (stock_price - average_price)
 
-                attach_color = "good"
+                attach_color = 'good'
                 if cumul_pct < 0:
-                    attach_color = "danger"
+                    attach_color = 'danger'
 
                 attachment = [
                     {
-                        "fallback": "{} sold!".format(type_text.capitalize()),
-                        "color": attach_color,
-                        "author_name": self.users[user_id]['first_name'],
-                        "author_icon": self.get_user_thumbnail_url(user_id),
-                        "title": "{} sold!".format(type_text.capitalize()),
-                        "text": response_text,
-                        "fields": [
+                        'fallback': '{} sold!'.format(type_text.capitalize()),
+                        'color': attach_color,
+                        'author_name': self.users[user_id]['first_name'],
+                        'author_icon': self.get_user_thumbnail_url(user_id),
+                        'title': '{} sold!'.format(type_text.capitalize()),
+                        'text': response_text,
+                        'fields': [
                             {
-                                "title": "Average Buy Price",
-                                "value": "{:04.2f}".format(average_price),
-                                "short": False
+                                'title': 'Average Buy Price',
+                                'value': '{:04.2f}'.format(average_price),
+                                'short': False
                             },
                             {
-                                "title": "Total Return",
-                                "value": "{:04.2f} coins (overall {:04.2f}%)".format(net_profit, cumul_pct),
-                                "short": False
+                                'title': 'Total Return',
+                                'value': '{:04.2f} coins (overall {:04.2f}%)'.format(net_profit, cumul_pct),
+                                'short': False
                             },
                             {
-                                "title": "Remaining Coins",
-                                "value": "{:04.2f}".format(self.users[user_id]['coins']),
-                                "short": False
+                                'title': 'Remaining Coins',
+                                'value': '{:04.2f}'.format(self.users[user_id]['coins']),
+                                'short': False
                             }
                         ],
-                        "ts": now
+                        'ts': now
                     }
                 ]
             else:
@@ -372,7 +372,7 @@ class HackcoinUserManager(object):
                     ticker
                 )
         else:
-            response = 'Markets are closed right now {} :scream:'.format(self.users[user_id]["first_name"])
+            response = 'Markets are closed right now {} :scream:'.format(self.users[user_id]['first_name'])
 
         # notify their account balance
         slack_client.api_call('chat.postMessage',
