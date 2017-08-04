@@ -116,6 +116,19 @@ def parse_slack_output(slack_rtm_output):
 
     return None, None, None
 
+def normalize_events(events):
+    okay_events = []
+
+    for event in events:
+        is_bot = (event.get('bot_id') is not None) and (event.get('user') != BOT_ID)
+        has_text = event.get('text') is not None
+
+        if is_bot or not has_text:
+            continue
+
+        is_direct_message = event['channel'][0] == 'D'
+        okay_events.append(event)
+
 def listen():
     # 0.25 second delay between reading from firehose
     READ_WEBSOCKET_DELAY = 0.25
@@ -125,6 +138,8 @@ def listen():
         print('hackcoinbot says hello!')
 
         while True:
+            data_read = slack_client.rtm_read()
+
             if CHECK_MARKET_REMINDER and is_one_hour_left():
                 slack_client.api_call('chat.postMessage',
                                       channel='#tradingfloor',
@@ -132,7 +147,10 @@ def listen():
                                       as_user=True)
                 CHECK_MARKET_REMINDER = False
 
-            command, channel, user_id = parse_slack_output(slack_client.rtm_read())
+            print('\n\n')
+            print(data_read)
+            print('\n\n')
+            command, channel, user_id = parse_slack_output(data_read)
             if command and channel and user_id:
                 handle_command(command, channel, user_id)
             time.sleep(READ_WEBSOCKET_DELAY)

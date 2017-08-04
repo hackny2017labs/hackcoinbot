@@ -3,6 +3,8 @@ from decimal import Decimal
 import time
 import json
 
+import requests
+
 
 BASE_URL = 'http://finance.google.com/finance/info?client=ig&infotype=infoquoteall&q={}'
 TICKERS_PER_BATCH = 100
