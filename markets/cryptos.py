@@ -21,19 +21,19 @@ def fetch_quote(symbol):
     quote = None
 
     try:
-        url = "https://api.cryptonator.com/api/ticker/{}-usd".format(symbol)
+        url = 'https://api.cryptonator.com/api/ticker/{}-usd'.format(symbol)
         u = urllib2.urlopen(url)
         content = u.read()
         data = json.loads(content)
 
         quote = {
-            "NAME": coins[symbol],
-            "TICKER": data["ticker"]["base"],
-            "PRICE": float(data["ticker"]["price"]),
-            "PRICEF": float(data["ticker"]["price"]),
-            "VOLUME": float(data["ticker"]["volume"]),
-            "CHANGE_AMT": float(data["ticker"]["change"]),
-            "TIMESTAMP": data["timestamp"]
+            'NAME': coins[symbol],
+            'TICKER': data['ticker']['base'],
+            'PRICE': float(data['ticker']['price']),
+            'PRICEF': float(data['ticker']['price']),
+            'VOLUME': float(data['ticker']['volume']),
+            'CHANGE_AMT': float(data['ticker']['change']),
+            'TIMESTAMP': data['timestamp']
         }
 
     except Exception, e:
@@ -41,5 +41,5 @@ def fetch_quote(symbol):
 
     return quote
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     print(fetch_quote('BTC'))

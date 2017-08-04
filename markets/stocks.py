@@ -9,23 +9,23 @@ def fetch_quote(ticker):
         try:
             # try different exchanges
 
-            url     = "http://finance.google.com/finance/info?client=ig&infotype=infoquoteall&q={}".format(exchange+ticker)
+            url     = 'http://finance.google.com/finance/info?client=ig&infotype=infoquoteall&q={}'.format(exchange+ticker)
             u       = urllib2.urlopen(url)
             content = u.read()
             data    = json.loads(content[3:])
             info    = data[0]
 
-            if "," in info['l']:
+            if ',' in info['l']:
                 info['l'] = info['l'].replace(',','')
             quote =   {
-                "NAME": info['name'],
-                "TICKER": info['t'],
-                "PRICE": info['l'],
-                "PRICEF": float(info['l']),
-                "CHANGE": float(info['cp']),
-                "CHANGE_AMT": info['c'],
-                "TIME": info['ltt'],
-                "DATE": datetime.strptime(info['lt_dts'], "%Y-%m-%dT%H:%M:%SZ")
+                'NAME': info['name'],
+                'TICKER': info['t'],
+                'PRICE': info['l'],
+                'PRICEF': float(info['l']),
+                'CHANGE': float(info['cp']),
+                'CHANGE_AMT': info['c'],
+                'TIME': info['ltt'],
+                'DATE': datetime.strptime(info['lt_dts'], '%Y-%m-%dT%H:%M:%SZ')
             }
             break
 
@@ -42,8 +42,8 @@ def batch_fetch_quotes(tickers):
     quotes = {}
 
     while cur < len(tickers):
-        ticker_string = ",".join(tickers[cur:cur + TICKERS_PER_BATCH])
-        url     = "http://finance.google.com/finance/info?client=ig&infotype=infoquoteall&q={}".format(ticker_string)
+        ticker_string = ','.join(tickers[cur:cur + TICKERS_PER_BATCH])
+        url     = 'http://finance.google.com/finance/info?client=ig&infotype=infoquoteall&q={}'.format(ticker_string)
         u       = urllib2.urlopen(url)
         content = u.read()
         try:
@@ -53,23 +53,23 @@ def batch_fetch_quotes(tickers):
 
         for info in data:
             try:
-                if "," in info['l']:
+                if ',' in info['l']:
                     info['l'] = info['l'].replace(',','')
 
                 quote =   {
-                    "NAME": info['name'],
-                    "TICKER": info['t'],
-                    "PRICE": info['l'],
-                    "PRICEF": float(info['l']),
-                    "CHANGE": float(info['cp']),
-                    "CHANGE_AMT": info['c'],
-                    "TIME": info['ltt'],
-                    "DATE": datetime.strptime(info['lt_dts'], "%Y-%m-%dT%H:%M:%SZ")
+                    'NAME': info['name'],
+                    'TICKER': info['t'],
+                    'PRICE': info['l'],
+                    'PRICEF': float(info['l']),
+                    'CHANGE': float(info['cp']),
+                    'CHANGE_AMT': info['c'],
+                    'TIME': info['ltt'],
+                    'DATE': datetime.strptime(info['lt_dts'], '%Y-%m-%dT%H:%M:%SZ')
                 }
 
                 ticker = info['t']
 
-                if "." in ticker:
+                if '.' in ticker:
                     ticker = ticker.replace('.', '-')
                 quotes[ticker] = quote
             except Exception, e:
@@ -85,5 +85,5 @@ def batch_fetch_quotes(tickers):
 
     return quotes
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     print(fetch_quote('AAPL'))
